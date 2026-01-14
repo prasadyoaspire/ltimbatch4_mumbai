@@ -1,0 +1,88 @@
+Q1] Armstrong Number:  ---> Sum of Cube of All digits is same number
+
+
+
+ public static boolean isArmStrong(int n){
+   int sum=0,t = n;
+    while (n!=0) {
+      int d=n % 10;
+      sum=sum+d*d*d;
+      n=n / 10;
+    }
+    return t==sum;
+  }
+
+    public static void main(String[] args) {
+       Scanner sc=new Scanner(System.in);
+       int n=sc.nextInt();
+
+      if(isArmStrong(n))
+        System.out.println(n+"Is an ArmStrong Number.");
+
+      else
+        System.out.println(n+"Is not an ArmStrong Number.");
+       
+    }
+----------------------------------------------------------------------------------------
+
+Q2] Strong Number ----> Sum of Factorials of number is Same Number
+
+
+public static int fact(int n)
+{
+	
+
+
+}
+
+public static boolean isStrong(int n){
+   int sum=0,t = n;
+    while (n!=0) {
+      int d=n % 10;
+      sum=sum+fact(d);
+      n=n/10;
+    }
+    return t==sum;
+  }
+
+    public static void main(String[] args) {
+       Scanner sc=new Scanner(System.in);
+       int n=sc.nextInt();
+
+      if(isStrong(n))
+        System.out.println(n+"Is an Strong Number.");
+
+      else
+        System.out.println(n+"Is not an Strong Number.");
+       
+    }
+
+----------------------------------------------------------------------------------------------------------------------
+
+Q3] Reverse Array:
+
+
+Public static int[] reverseArray(int a[])
+{
+ int b[]=new int[a.length];
+ int j=0;
+ for(int i=a.length-1;i>=0;i--)
+ {
+	b[j]=a[i];
+	j++;
+ }
+ return b;
+
+public static void main(String[] args) {
+       Scanner sc=new Scanner(System.in);
+       int n=sc.nextInt();
+	int a[]=new int[n];
+       for(int i=0;i<n;i++)
+	{
+	 a[i]=sc.nextInt();
+	}
+	
+	int b[]=reverseArray(a);
+	  
+    }
+}
