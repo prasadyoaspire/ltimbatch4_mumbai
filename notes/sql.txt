@@ -1,0 +1,102 @@
+# You are using MYSQL
+
+create table product_tbl(
+product_id int, 
+product_name varchar(30) not null unique, 
+product_price decimal(10,2) not null, 
+mfd date, 
+category varchar(30),
+primary key(product_id));
+
+insert into product_tbl values(10,'IphoneX',120000.00,'2025-01-30','phone');
+insert into product_tbl values(20,'IphoneY',140000.00,'2025-03-30','phone');
+insert into product_tbl values(30,'IphoneZ',100000.00,'2025-01-15', 'phone');
+insert into product_tbl values(40,'Dell Vestro',120000.00,'2025-01-15', 'laptop');
+insert into product_tbl values(50,'Mac Book',170000.00,'2025-01-15', 'laptop');
+
+select * from product_tbl;
+-- select product_name,product_price from product_tbl;
+
+-- select count(*) as Number_Of_Products from product_tbl;
+-- select max(product_price) as MAX_PRICE from product_tbl;
+-- select sum(product_price) as Total from product_tbl;
+
+#sort all the products in asc order of price
+-- select * from product_tbl order by product_price DESC; 
+
+
+-- select  * from product_tbl where product_id = 30;
+-- select * from product_tbl where category = "laptop";
+
+-- select * from product_tbl where category = "phone" AND product_price > 110000;
+
+-- select sum(product_price) from product_tbl group by category;
+
+
+#update
+
+update product_tbl set product_price = 50000.00 where product_id = 30;
+
+update product_tbl set product_price = 60000.00, mfd = '2025-01-01' where product_id = 10;
+
+select  * from product_tbl;
+
+
+#Delete
+
+delete from product_tbl where product_id = 40;
+
+
+select  * from product_tbl;
+
+
+=======================================================
+
+Joins:
+
+# You are using MYSQL
+create table department(
+dept_id int,
+dept_name varchar(20) not null unique,
+primary key(dept_id)
+);
+
+create table employee (
+emp_id int,
+name varchar(30) not null,
+age int,
+email varchar(30) not null unique,
+dept_no int,
+primary key(emp_id),
+foreign key(dept_no) references department(dept_id)
+);
+
+insert into department values(10,'IT');
+insert into department values(20,'HR');
+insert into department values(30,'Sales');
+
+insert into employee values(1001,'raj', 24, 'raj@tmail.com', 10);
+insert into employee values(1002,'karan', 25, 'karan@tmail.com', 20);
+insert into employee values(1003,'sami', 24, 'sami@tmail.com', 10);
+insert into employee values(1004,'dinesh', 26, 'dinesh@tmail.com', 30);
+insert into employee values(1005,'priya', 24, 'priya@tmail.com', 30);
+
+select * from department;
+
+select * from employee;
+
+select e.name, d.dept_name from employee e join department d on e.dept_no = d.dept_id;
+
+
+============================================
+
+
+
+
+
+
+
+
+
+
+

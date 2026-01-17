@@ -1,0 +1,335 @@
+package com.examly.entity;
+
+import java.sql.Date;
+import java.time.LocalDate;
+
+public class Book {
+    private int bookId;
+    private String title;
+    private String author;
+    private LocalDate publicationDate;
+    // private Date publicationDate;
+    private String genre;
+    private int copiesAvailable;
+
+    public int getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(int bookId) {
+        this.bookId = bookId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public LocalDate getPublicationDate() {
+    return publicationDate;
+    }
+
+    public void setPublicationDate(LocalDate publicationDate) {
+    this.publicationDate = publicationDate;
+    }
+
+    // public Date getPublicationDate() {
+    //     return publicationDate;
+    // }
+
+    // public void setPublicationDate(Date publicationDate) {
+    //     this.publicationDate = publicationDate;
+    // }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public int getCopiesAvailable() {
+        return copiesAvailable;
+    }
+
+    public void setCopiesAvailable(int copiesAvailable) {
+        this.copiesAvailable = copiesAvailable;
+    }
+
+    @Override
+    public String toString() {
+        return "Book ID: " + bookId + "\n" +
+                "Title: " + title + "\n" +
+                "Author: " + author + "\n" +
+                "Publication Date: " + publicationDate + "\n" +
+                "Genre: " + genre + "\n" +
+                "Copies Available: " + copiesAvailable + "\n";
+    }
+
+}
+
+======================================
+util
+======================================
+
+package com.examly.util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DBConnectionUtil {
+    
+    static String url = "jdbc:mysql://localhost/appdb";
+    static String username = "root";
+    static String password = "examly";
+
+    public static Connection getDBConnection() {
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return con;
+    }
+}
+
+==========================================================
+service interface:
+=========================================================
+
+package com.examly.service;
+
+import java.util.List;
+
+import com.examly.entity.Book;
+
+public interface BookService {
+    
+    String addBook(Book book);
+    List<Book> getAllBooks();
+    List<Book> searchByTitle(String title);
+}
+
+
+=====================================================
+
+service implementation:
+==================================================
+
+package com.examly.service;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.examly.entity.Book;
+import com.examly.util.DBConnectionUtil;
+
+public class BookServiceImpl implements BookService {
+
+    @Override
+    public String addBook(Book book) {
+
+        if (book.getTitle() == null || book.getTitle().trim().isEmpty() ||
+                book.getAuthor() == null || book.getAuthor().trim().isEmpty() ||
+                book.getPublicationDate() == null ||
+                book.getGenre() == null || book.getGenre().trim().isEmpty() ||
+                book.getCopiesAvailable() <= 0) {
+            return "Invalid book details.";
+        }
+      
+        String sql = "INSERT INTO books (title, author, publicationDate, genre, copiesAvailable) VALUES (?, ?, ?, ?, ?)";
+
+        try(  Connection con = DBConnectionUtil.getDBConnection();
+        PreparedStatement ps = con.prepareStatement(sql);) {
+           
+            ps.setString(1, book.getTitle());
+            ps.setString(2, book.getAuthor());
+            ps.setDate(3, Date.valueOf(book.getPublicationDate()));// convert LocalDate to java.sql.Date
+            ps.setString(4, book.getGenre());
+            ps.setInt(5, book.getCopiesAvailable());
+
+            int rowsEffected = ps.executeUpdate();
+            return rowsEffected > 0 ? "Book added successfully." : "Failed to add book.";
+
+        } catch (SQLException e) {
+            return "Error: " + e.getMessage();
+        }
+
+    }
+
+    @Override
+    public List<Book> getAllBooks() {
+       
+        String sql = "select * from books";
+        List<Book> books = new ArrayList<>();
+
+        try( Connection con = DBConnectionUtil.getDBConnection();) {
+            Statement st = con.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                // get the data from ResultSet and set to book object
+                Book book = new Book();
+                book.setBookId(rs.getInt(1));
+                book.setTitle(rs.getString(2));
+                book.setAuthor(rs.getString(3));
+                book.setPublicationDate(rs.getDate(4).toLocalDate());
+                book.setGenre(rs.getString(5));
+                book.setCopiesAvailable(rs.getInt(6));
+
+                books.add(book); // adding book to List
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return books;
+    }
+
+    @Override
+    public List<Book> searchByTitle(String title) {
+
+        String sql = "SELECT * FROM books WHERE title LIKE ?";
+
+        List<Book> books = new ArrayList<>();
+
+        try (Connection con = DBConnectionUtil.getDBConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, "%" + title + "%");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                // get the data from ResultSet and set to book object
+                Book book = new Book();
+                book.setBookId(rs.getInt(1));
+                book.setTitle(rs.getString(2));
+                book.setAuthor(rs.getString(3));
+                book.setPublicationDate(rs.getDate(4).toLocalDate());
+                book.setGenre(rs.getString(5));
+                book.setCopiesAvailable(rs.getInt(6));
+
+                books.add(book); // adding book to List
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return books;
+    }
+
+}
+
+=========================================================
+Main class:
+========================================================
+package com.examly;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Scanner;
+
+import com.examly.entity.Book;
+import com.examly.service.BookService;
+import com.examly.service.BookServiceImpl;
+
+public class MainModule {
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+        BookService bookService = new BookServiceImpl();
+
+        while (true) {
+            System.out.println("1. Add Book\n2. View All Books\n3. Search By Title\n4. Exit");
+            int choice = Integer.parseInt(sc.nextLine());
+
+            switch (choice) {
+                case 1 -> addBook(sc, bookService);
+                case 2 -> viewAllBooks(bookService);
+                case 3 -> searchByTitle(sc, bookService);
+                case 4 -> {
+                    System.out.println("Exiting...");
+                    return;
+                }
+                default -> System.out.println("Invalid option.");
+            }
+        }
+
+    }
+
+    public static void addBook(Scanner sc, BookService bookService) {
+
+        System.out.print("Enter Title: ");
+        String title = sc.nextLine();
+        System.out.print("Enter Author: ");
+        String author = sc.nextLine();
+        System.out.print("Enter Publication Date (yyyy-mm-dd): ");
+        String dateStr = sc.nextLine();
+        System.out.print("Enter Genre: ");
+        String genre = sc.nextLine();
+        System.out.print("Enter Copies Available: ");
+        int noOfCopies = Integer.parseInt(sc.nextLine());
+
+        //convert string format date to LocalDate
+        LocalDate publicationDate = LocalDate.parse(dateStr);
+
+        // set input values to book object
+        Book book = new Book();
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setPublicationDate(publicationDate);     
+        book.setGenre(genre);
+        book.setCopiesAvailable(noOfCopies);
+
+        // call the service method to save book object into database
+        String result = bookService.addBook(book);
+        System.out.println(result);
+
+    }
+
+    public static void viewAllBooks(BookService bookService) {
+
+        List<Book> books = bookService.getAllBooks();
+        System.out.println("Book List:");
+        if (books.isEmpty()) {
+            System.out.println("No books available.");
+        } else {
+
+            for (Book b : books) {
+                System.out.println(b);
+            }
+        }
+    }
+
+    public static void searchByTitle(Scanner sc, BookService bookService) {
+        System.out.print("Enter title to search: ");
+        String title = sc.nextLine();
+        List<Book> books = bookService.searchByTitle(title);
+
+        if (books.isEmpty()) {
+            System.out.println("No books found.");
+        } else {
+            for (Book b : books) {
+                System.out.println(b);
+            }
+        }
+    }
+
+}
+
+
