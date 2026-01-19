@@ -1,0 +1,325 @@
+Question 1:
+
+Payment Gateway Interface
+
+You are building a system that processes different types of payments.
+Create an interface named PaymentGateway with a method void processPayment(double amount).
+Implement this interface for two payment types: CreditCardPayment and PayPalPayment.
+Take user input for the payment amount and simulate processing the payment using both methods.
+
+Input format :
+The input consists of a double which represents the amount.
+
+Output format :
+The output displays the simulated processing of payment using both drone CreditCard and PayPal. The amount will be rounded to two decimal places.
+
+Refer to the sample output for formatting specifications.
+
+Sample test cases :
+
+Input 1 :
+500
+
+Output 1 :
+Processing credit card payment of:  $500.00
+Credit Card payment processed successfully!
+
+Processing Paypal payment of:  $500.00
+Paypal payment processed successfully!
+
+===============================================================================================
+
+Question2:
+
+Notification System Interface
+
+Create an interface named NotificationService with a method sendNotification().
+Implement this interface for two types of notifications: EmailNotification and SMSNotification.
+Ask the user to input a message and simulate sending it using both methods.
+
+
+===================================================================================================
+Question3:
+
+ class Word:
+    data members: 
+        int number
+        String st
+    Word(int number, String st): constructor with public visibility
+
+class Vowels:
+ method definitions:
+     checkWord(Word word) throws Exception:     
+        return type: String    
+
+     finalizeWord(Word word) throws Exception:
+        return type: String  
+
+ class VowelException: create userdefined exception
+
+  
+ method implementations:
+
+ String checkWord(Word word):
+
+  Write a code to validate the criteria for the word.
+  - throw a VowelException if the number is greater than 5 with the message "Vowels limit exceeded".
+   - throw a VowelException if the string doesn't contain the number of vowels equal to the number variable with the message "Number mismatched"
+   - if no above exception is found then return a string message "Can be finalized"
+
+- String finalizedWord(Word word) :
+
+  - Write a code to send an invite to the nominee,
+  - If checkWord() method throws a VowelException then returns a message "Failed". (Using try-catch block).
+   - If it throws any other exception then return a message "Other exception"
+   - If no exception is found then return a message "Successful"
+
+One of the Sample Input:
+
+   Word w = new Word(2,"AOPLK");
+   Vowels v = new Vowles();
+
+   String s = v.checkWord(w);
+
+ Sample output:
+
+     Can be finalized
+
+=================================================================================
+Question-4: Rearrange by Parity
+
+Method Signature:
+
+public static int[] rearrangeByParity(int[] array);
+
+Description:
+Rearrange the array so that all even numbers appear before all odd numbers.
+Maintain the relative order of even and odd numbers.
+
+================================================================================
+Question-5: Move Zeros to End
+
+Method Signature:
+
+public static int[] moveZerosToEnd(int[] array);
+
+Description:
+Move all the zero elements to the end of the array while maintaining the relative order of the non-zero elements.
+
+====================================================================================
+Question-6: Separate Duplicates and Uniques
+
+Method Signature:
+
+public static int[] rearrangeByUniqueness(int[] array);
+
+Description:
+Rearrange the array so that all unique elements come first, followed by duplicate elements.
+Preserve the original order of both unique and duplicate elements.
+=============================================================================================
+
+Question-7: is Armstrong number or not
+
+
+ public static boolean isArmStrong(int n){
+  
+  }
+
+ public static void main(String[] args) {
+      
+ }
+----------------------------------------------------------------------------------------
+
+Question-8: Sum of Factorials of number is Same Number
+
+public static int fact(int n) {
+	
+
+}
+
+public static boolean isStrong(int n){
+ 
+}
+
+public static void main(String[] args) {
+       
+       
+}
+
+----------------------------------------------------------------------------------------------------------------------
+
+Question-9: Reverse Array:
+
+Public static int[] reverseArray(int a[]) {
+ 
+}
+
+public static void main(String[] args) {
+   
+}
+
+----------------------------------------------------------------------------------------------------------------------
+
+Question-10: Method Overriding
+
+Write two subclasses named Dog and Cat to override the method name() in animal class.
+Invoking name() method should print the class name
+
+Question Instructions:
+1. Create 3 classes Animal, Dog and Cat.
+2. Animal class contains name() method. Both Dog and Cat extends Animal class and overrides name() method
+3. Create a driver class named Main to test the above classes
+4. The solution code should be written inside the main method() of the Main class
+
+Input format :
+
+No console input.
+
+Output format :
+
+Print the String from the subclass named Dog and Cat in separate lines.
+
+Sample test cases :
+
+Input 1 :
+
+Output 1 :
+Dog
+Cat
+
+// You are using Java
+class Animal { 
+  
+    // Type your code
+} 
+class Main { 
+    public static void main(String[] args) 
+    { 
+  
+      // Type your code here
+    } 
+}
+class Dog extends Animal { 
+  
+   // Type your code here
+} 
+  
+class Cat extends Animal { 
+  // Type your code here
+}
+
+----------------------------------------------------------------------------------------------------------------------
+
+Question-11 : Shape Interface: 
+
+Design a Java program to calculate the area and perimeter of geometric shapes. The program should support two types of shapes: circles and rectangles.
+
+Define an interface named Shape with the following methods:
+
+Interface	| methods
+------------------------------
+Shape		| double calculateArea()
+		| double calculatePerimeter()
+
+Create a class Circle and Rectangle that implements the Shape interface 
+
+Class		| Attribute	
+--------------------------------
+Circle		| radius:double
+		|
+Rectangle	| length:double
+		| width:double
+ 
+ 
+Formula:
+
+Area of Circle  	:  Math.PI*radius*radius
+
+Perimeter of Circle	:  2*Math.PI*radius
+
+Area of Rectangle	: length * width
+
+Perimeter of Rectanble	: 2*(length+width)
+
+
+Input format :
+
+The first line consists of a double that represents the radius.
+The second line consists of a double that represents the length.
+The third line consists of a double that represents the width.
+
+Output format :
+
+The output should display the area and perimeter of a circle and rectangle.
+
+Sample test cases :
+
+Input 1 :
+10.0
+15.0
+20.0
+
+Output 1 :
+
+Circle Area: 314.1592653589793
+Circle Perimeter: 62.83185307179586
+Rectangle Area: 300.0
+Rectangle Perimeter: 70.0
+
+Input 2 :
+
+3.5
+8.2
+4.6
+
+Output 2 :
+
+Circle Area: 38.48451000647496
+Circle Perimeter: 21.991148575128552
+Rectangle Area: 37.71999999999999
+Rectangle Perimeter: 25.599999999999998
+
+----------------------------------------------------------------------------------------------------------------------
+
+Question-12 : Online Order Interface:
+
+You are developing an online ordering system that handles orders through various methods. 
+Create an interface named OrderMethod with a method processOrder(). 
+Implement this interface for two order methods: OnlineStore and MobileApp. 
+Take user input for the order amount and simulate processing orders using both methods.
+
+Input format :
+
+The input consists of an double which represents the order amount.
+
+Output format :
+
+The output displays the simulated processing of orders using both online store and mobile app methods. 
+The amount will be rounded to two decimal places.
+
+Refer to the sample output for formatting specifications.
+
+Sample test cases :
+
+Input 1 :
+250.75
+
+Output 1 :
+
+Processing online store order of Rs 250.75
+Online store order processed successfully!
+Processing mobile app order of Rs 250.75
+Mobile app order processed successfully!
+
+Input 2 :
+
+1024.50
+
+Output 2 :
+
+Processing online store order of Rs 1024.50
+Online store order processed successfully!
+Processing mobile app order of Rs 1024.50
+Mobile app order processed successfully!
+
+

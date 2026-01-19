@@ -1,0 +1,127 @@
+----------------------
+Product.java:
+---------------------
+package com.examly;
+
+public class Product {
+
+    private int id;
+    private String name;
+    private double price;
+    private int quantity;
+
+   //constructors
+   //setters and getters
+
+}
+
+-------------------------
+PriceComparator.java:
+-------------------------
+package com.examly;
+
+import java.util.Comparator;
+
+public class PriceCompartor implements Comparator<Product> {
+
+    @Override
+    public int compare(Product p1, Product p2) {
+        return Double.compare(p1.getPrice(), p2.getPrice()); // asc order
+    }
+
+}
+
+-------------------------
+ProductMain.java:
+-------------------------
+package com.examly;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Scanner;
+
+public class ProductMain {
+
+    private HashSet<Product> products = new HashSet<>();
+
+    public void addProduct(int n) {
+        Scanner sc = new Scanner(System.in);
+        for (int i = 0; i < n; i++) {
+            System.out.println("Enter Id:");
+            int id = Integer.parseInt(sc.nextLine());
+            System.out.println("Enter Name:");
+            String name = sc.nextLine();
+            System.out.println("Enter Price:");
+            double price = Double.parseDouble(sc.nextLine());
+            System.out.println("Enter Qty:");
+            int qty = Integer.parseInt(sc.nextLine());
+
+            Product p = new Product(id, name, price, qty);
+            products.add(p);
+            System.out.println("Product added successfully!");
+
+        }
+    }
+
+    public void displayProducts() {
+        ArrayList<Product> productList = new ArrayList<>(products);
+        Collections.sort(productList, new PriceCompartor());
+
+        for (Product p : productList) {
+            System.out.printf("Id: %d, Name: %s, Price: %.2f, Quantity: %d%n", p.getId(), p.getName(), p.getPrice(),
+                    p.getQuantity());
+        }
+    }
+
+    public void updateProductPrice() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter productId:");
+        int inputId = Integer.parseInt(sc.nextLine());
+        System.out.println("Enter price to update:");
+        double newPrice = Double.parseDouble(sc.nextLine());
+        boolean flag = false;
+        for (Product p : products) {
+            if (p.getId() == inputId) {
+                p.setPrice(newPrice);
+                System.out.println("Product price updated successfully!");
+                flag = true;
+            }
+        }
+        if (!flag) {
+            System.out.println("Product not found");
+        }
+    }
+
+    public void deleteProduct() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter product id to delete: ");
+        int inputId = Integer.parseInt(sc.nextLine());
+        boolean flag = false;
+        for (Product p : products) {
+            if (p.getId() == inputId) {
+                products.remove(p);
+                System.out.println("Product deleted successfully!");
+                flag = true;
+                break; // required to avoid ConcurrentModificationException, otherwise use Iterator to
+                       // remove
+            }
+        }
+        if (!flag) {
+            System.out.println("Product not found");
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter number of products to add.");
+        int n = sc.nextInt();
+
+        ProductMain pMain = new ProductMain();
+        pMain.addProduct(n);
+        pMain.displayProducts();
+        pMain.updateProductPrice();
+        pMain.deleteProduct();
+        pMain.displayProducts();
+    }
+}
