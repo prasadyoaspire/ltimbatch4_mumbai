@@ -1,0 +1,109 @@
+=============================================================================
+EmptyTitleException.java:
+=============================================================================
+
+package com.examly;
+
+public class EmptyTitleException extends Exception  {
+    public EmptyTitleException(String msg) {
+        super(msg);
+    }
+}
+
+============================================================================
+BookNotFoundException.java:
+============================================================================
+
+package com.examly;
+
+public class BookNotFoundException extends Exception {
+
+    public BookNotFoundException(String msg) {
+        super(msg);
+    }
+}
+
+============================================================================
+LibraryMangement1.java:
+============================================================================
+package com.examly;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Scanner;
+
+public class LibraryMangement1 {
+    public static void main(String[] args) {
+
+        HashSet<String> bookTitles = new HashSet<>();
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter number of books: ");
+        int n = Integer.parseInt(sc.nextLine());
+
+	//add
+        for (int i = 0; i < n; i++) {
+            System.out.println("Enter book title:");
+            String title = sc.nextLine();
+            try {
+                if (title.isEmpty()) {
+                    throw new EmptyTitleException("Invalid title");
+                }
+                bookTitles.add(title);
+                System.out.println("Book added successfully!");
+            } catch (EmptyTitleException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+	//update
+        System.out.println("Enter book title to update");
+        String title = sc.nextLine();
+        System.out.println("Enter new title:");
+        String newTitle = sc.nextLine();
+        try {
+            if (!bookTitles.contains(title)) {
+                throw new BookNotFoundException("Book not found.");
+            }
+            bookTitles.remove(title);
+            bookTitles.add(newTitle);
+            System.out.println("Title updated successfully!");
+        } catch (BookNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+	//delete
+        System.out.println("Enter book title to delete");
+        String titleToDelete = sc.nextLine();
+        try {
+            if (!bookTitles.contains(titleToDelete)) {
+                throw new BookNotFoundException("Book not found.");
+            }
+            bookTitles.remove(titleToDelete);
+        } catch (BookNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+        // Find Earliest book
+        if (bookTitles.isEmpty()) {
+            System.out.println("No books available");
+        } else {
+            // convert set to list then sort it
+            List<String> list = new ArrayList<>(bookTitles);
+            Collections.sort(list);
+            String firstElement = list.get(0);
+            System.out.println("Earliest element: " + firstElement);
+        }
+
+        // display all books
+        System.out.println("All Books:");
+        if (bookTitles.isEmpty()) {
+            System.out.println("No books available");
+        } else {
+            for (String b : bookTitles) {
+                System.out.println(b);
+            }
+        }
+    }
+}
