@@ -98,7 +98,7 @@ public class AirlineReservationApp {
     }
 
     public static void displayAllReservations(Connection con) {
-        String sql = "select * from reservation";
+        String sql = "select * from reservation order by passenger_name desc";
         try (PreparedStatement st = con.prepareStatement(sql)) {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
