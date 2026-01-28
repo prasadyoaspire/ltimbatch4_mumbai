@@ -1,0 +1,316 @@
+=================================================================================
+Example 1
+=================================================================================
+package com.examly.springapp;
+
+public class Product {
+
+    private int productId;
+    private String productName;
+    private double productPrice;
+    
+    public int getProductId() {
+        return productId;
+    }
+    public void setProductId(int productId) {
+        this.productId = productId;
+    }
+    public String getProductName() {
+        return productName;
+    }
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    public double getProductPrice() {
+        return productPrice;
+    }
+    public void setProductPrice(double productPrice) {
+        this.productPrice = productPrice;
+    }    
+}
+-----------------------------------------------
+
+applicationContext.xml
+
+   <bean id="product1" class="com.examly.springapp.Product">
+      <property name="productId" value="102"/>
+      <property name="productName" value="SonyES"/>
+      <property name="productPrice" value="78000"/>
+    </bean>
+
+------------------------------------------------
+
+package com.examly.springapp;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class ProductMain {
+
+    public static void main(String[] args) {
+
+        ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+        Product product1 = (Product) context.getBean("product1");
+
+        System.out.println("Product Details");
+        System.out.println("ID: " + product1.getProductId());
+        System.out.println("Name: " + product1.getProductName());
+        System.out.println("Price: " + product1.getProductPrice());
+    }
+}
+
+=================================================================================
+DI example
+=================================================================================
+
+package com.examly.springapp;
+
+public class Engine {
+    private String type;
+    private int horsepower;
+    private double capacity;
+    
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+    public int getHorsepower() {
+        return horsepower;
+    }
+    public void setHorsepower(int horsepower) {
+        this.horsepower = horsepower;
+    }
+    public double getCapacity() {
+        return capacity;
+    }
+    public void setCapacity(double capacity) {
+        this.capacity = capacity;
+    }
+    
+}
+
+-------------------------------------------------
+package com.examly.springapp;
+
+public class Car {
+
+    private String model;
+    private Engine engine; // dependency object
+    
+    public String getModel() {
+        return model;
+    }
+    public void setModel(String model) {
+        this.model = model;
+    }
+    public Engine getEngine() {
+        return engine;
+    }
+    public void setEngine(Engine engine) {
+        this.engine = engine;
+    }
+}
+
+-------------------------------------
+
+applicationContext.xml:
+
+    <bean id="engine1" class="com.examly.springapp.Engine">
+      <property name="type" value="EN203"/>
+      <property name="horsepower" value="9000"/>
+      <property name="capacity" value="500.50"/>
+    </bean>
+
+   <bean id="myCar" class="com.examly.springapp.Car">
+      <property name="model" value="NEWCAR"/>
+      <property name="engine" ref="engine1"/>
+   </bean>
+
+----------------------------------------
+
+package com.examly.springapp;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class ProductMain {
+
+    public static void main(String[] args) {
+        
+        ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+        Product product1 = (Product) context.getBean("product1");
+
+        System.out.println("Product Details");
+        System.out.println("ID: "+product1.getProductId());
+        System.out.println("Name: "+product1.getProductName());
+        System.out.println("Price: "+product1.getProductPrice());
+    }
+}
+
+=================================================================================
+Collection example 1
+=================================================================================
+
+package com.examly.springapp;
+
+import java.util.List;
+
+public class Student {
+
+    private int studentId;
+    private String studentName;
+    private List<String> skills;
+    
+    public int getStudentId() {
+        return studentId;
+    }
+    public void setStudentId(int studentId) {
+        this.studentId = studentId;
+    }
+    public String getStudentName() {
+        return studentName;
+    }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+    public List<String> getSkills() {
+        return skills;
+    }
+    public void setSkills(List<String> skills) {
+        this.skills = skills;
+    }
+  }
+
+---------------------------------------------------------
+beans.xml:
+
+   <bean id="stu1" class="com.examly.springapp.Student">
+        <property name="studentId" value="1111"/>
+        <property name="studentName" value="Raj Kumar"/>
+        <property name="skills">        
+            <list>
+                <value>sql</value>
+                <value>c++</value>
+                <value>java</value>
+            </list>
+        </property>
+    </bean>
+
+-------------------------------------------------------
+
+package com.examly.springapp;
+
+import java.util.List;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class StudentMain {
+
+    public static void main(String[] args) {
+        
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
+        
+	Student student = (Student) context.getBean("stu1");
+
+        System.out.println("Id: "+ student.getStudentId());
+        System.out.println("Name: "+student.getStudentName());
+        System.out.println("Skills: "+student.getSkills());
+    
+    }
+}
+
+=================================================================================
+Collection example 2
+=================================================================================
+
+package com.examly.springapp;
+
+import java.util.List;
+
+public class EngStudent {
+
+    private int studentId;
+    private String studentName;
+    private List<Skill> skills;
+    
+    public int getStudentId() {
+        return studentId;
+    }
+    public void setStudentId(int studentId) {
+        this.studentId = studentId;
+    }
+    public String getStudentName() {
+        return studentName;
+    }
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+    public List<Skill> getSkills() {
+        return skills;
+    }
+    public void setSkills(List<Skill> skills) {
+        this.skills = skills;
+    }
+}
+
+----------------------------------------------------
+
+beans.xml
+
+ <bean id="skill1" class="com.examly.springapp.Skill">
+        <property name="name" value="sql"/>
+        <property name="rating" value="10"/>
+    </bean>
+
+    <bean id="skill2" class="com.examly.springapp.Skill">
+        <property name="name" value="java"/>
+        <property name="rating" value="8"/>
+    </bean>
+
+    <bean id="skill3" class="com.examly.springapp.Skill">
+        <property name="name" value="git"/>
+        <property name="rating" value="7"/>
+    </bean>
+
+    <bean id="stu2" class="com.examly.springapp.EngStudent">
+        <property name="studentId" value="2222"/>
+        <property name="studentName" value="Raj"/>
+        <property name="skills">        
+            <list>
+                 <ref bean="skill1"/>
+                 <ref bean="skill2"/>
+                 <ref bean="skill3"/>
+            </list>
+        </property>
+    </bean>
+
+------------------------------------------------------------
+package com.examly.springapp;
+
+import java.util.List;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class StudentMain {
+
+    public static void main(String[] args) {
+        
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
+      
+     
+        EngStudent engStudent = (EngStudent) context.getBean("stu2");
+
+  	System.out.println("Eng Student Details");
+
+        System.out.println("Id: "+ engStudent.getStudentId());
+        System.out.println("Name: "+engStudent.getStudentName());
+        List<Skill> skills = engStudent.getSkills();
+        
+        for(Skill s : skills) {
+            System.out.println(s.getName()+" "+s.getRating());
+        }
+    }
+}
+
