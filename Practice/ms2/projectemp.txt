@@ -1,0 +1,82 @@
+
+
+@Entity
+public class Project {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String projectName;
+    private double budget;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Employee> employees = new ArrayList<>();
+}
+
+=====================================================
+@Entity
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int employeeId;
+    private String name;
+    private String role;
+    private double salary;
+    private boolean maritalStatus;
+    private LocalDate dateOfBirth;
+
+    @ManyToOne
+    @JoinColumn(name="project_id")
+    @JsonBackReference
+    private Project project;
+}
+
+
+=========================================================
+
+@Service
+public class ProjectServiceImpl implements ProjectService {
+
+    @Autowired
+    private ProjectRepository projectRepo;
+
+    @Autowired
+    private EmployeeRepository empRepo;
+
+    @Override
+    public Project addProject(Project project) {
+        return projectRepo.save(project);
+    }
+
+    @Override
+    public void assignEmployeeToProject(int projectId, int employeeId) {
+
+        Optional<Project> optProject = projectRepo.findById(projectId);
+        Optional<Employee> optEmp = empRepo.findById(employeeId);
+
+        if (optProject.isEmpty() || optEmp.isEmpty()) {
+
+            throw new ResourceNotFoundException("not found");
+        }
+
+        Project p = optProject.get();
+        Employee e = optEmp.get();
+
+        e.setProject(p);
+
+        List<Employee> projectEmps = p.getEmployees();
+        projectEmps.add(e);
+
+        projectRepo.save(p);
+    }
+
+===============================================
+
+   @PostMapping("/api/project/{projectId}/employee/{employeeId}")
+    public ResponseEntity<String> assignProject(@PathVariable int projectId, @PathVariable int employeeId) {
+        pService.assignEmployeeToProject(projectId, employeeId);
+        return ResponseEntity.status(201).body("assigned");
+    }
+}
