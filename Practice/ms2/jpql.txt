@@ -1,0 +1,52 @@
+
+JPQL:
+
+  1. Count Doctors by License State  :      ("/state/{state}/count")
+ 
+    @Query("SELECT COUNT(d) FROM Doctor d WHERE d.medicalLicense.licenseState = :state")
+    Long countDoctorsByLicenseState(@Param("state") String state);
+
+
+  2. Retrieve Doctors whose name starts with a given prefix
+
+      	// Retrieve Doctors whose name starts with a given prefix
+	@Query("SELECT d FROM Doctor d WHERE d.name LIKE CONCAT(:prefix, '%')")
+	List<Doctor> findDoctorsByNameStartingWith(@Param("prefix") String prefix);
+
+	// Retrieve Doctors whose name ends with a given suffix
+	@Query("SELECT d FROM Doctor d WHERE d.name LIKE CONCAT('%', :suffix)")
+	List<Doctor> findDoctorsByNameEndingWith(@Param("suffix") String suffix);
+
+
+  3. Retrieve Doctors sorted by experience in descending order :   (/api/doctor/byexperience)
+
+     // Retrieve Doctors sorted by experience in descending order
+    @Query("SELECT d FROM Doctor d ORDER BY d.yearsOfExperience DESC")
+    List<Doctor> findAllDoctorsOrderByExperienceDesc();
+
+
+   4. Find licenses that are expired
+
+ 	@Query("SELECT l FROM License l WHERE l.expiryDate < :currentDate")
+	List<License> findExpiredLicenses(@Param("currentDate") LocalDate currentDate);
+
+	
+
+	public List<License> getExpiredLicenses() { 
+
+		LocalDate today = LocalDate.now(); 
+
+		return licenseRepository.findExpiredLicenses(today);
+	}
+
+
+ 5. Find licenses that are still valid
+
+	@Query("SELECT l FROM License l WHERE l.expiryDate >= :currentDate")
+	List<License> findValidLicenses(@Param("currentDate") LocalDate currentDate);
+
+
+
+
+
+
