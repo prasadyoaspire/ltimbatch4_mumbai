@@ -1,0 +1,400 @@
+package com.example.doctorsapp.model;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+
+@Entity
+public class Doctor {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int doctorId;
+	private String name;
+	private String email;
+	private String specialization;
+	private int yearsOfExperience;
+
+	@OneToOne(mappedBy = "doctor", cascade = CascadeType.ALL)
+	@JsonManagedReference
+	private MedicalLicense medicalLicense;
+}
+
+-------------------------------------------------------
+
+package com.example.doctorsapp.model;
+
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+
+@Entity
+public class MedicalLicense {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
+    private int licenseId;
+    private LocalDate issueDate;
+    private LocalDate expiryDate;
+    private String licenseState;
+    
+    @OneToOne
+    @JoinColumn(name="doctor_id")
+    @JsonBackReference
+    private Doctor doctor;
+}
+
+---------------------------------
+
+package com.example.doctorsapp.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.doctorsapp.model.Doctor;
+
+public interface DoctorRepo extends JpaRepository<Doctor,Integer>{
+
+}
+
+-------------------------------------------
+
+package com.example.doctorsapp.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.doctorsapp.model.MedicalLicense;
+
+public interface MedicalLicenseRepo extends JpaRepository<MedicalLicense,Integer> {
+
+    List<MedicalLicense> findByLicenseState(String licenseState);
+
+      @Query("SELECT l FROM MedicalLicense l WHERE l.expiryDate < :currentDate")
+    List<MedicalLicense> findExpiredLicenses(@Param("currentDate") LocalDate currentDate);
+
+}
+
+----------------------------------------
+
+package com.example.doctorsapp.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+
+    public ResourceNotFoundException(String msg) {
+        super(msg);
+    }
+}
+
+
+package com.example.doctorsapp.exception;
+
+public class ExperienceRestrictionException extends RuntimeException {
+
+    public ExperienceRestrictionException(String msg) {
+        super(msg);
+    }
+}
+
+---------------------------------------------
+
+package com.example.doctorsapp.service;
+
+import java.util.List;
+
+import com.example.doctorsapp.model.Doctor;
+import com.example.doctorsapp.model.MedicalLicense;
+
+public interface DoctorService {
+
+    Doctor saveDoctor(Doctor doctor);
+    Doctor findDoctorById(int doctorId);
+    List<Doctor> findAllDoctors();
+    MedicalLicense addMedicalLicense(int doctorId, MedicalLicense medicalLicense);    
+}
+
+
+-------------------------------------------------
+
+package com.example.doctorsapp.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.doctorsapp.exception.ExperienceRestrictionException;
+import com.example.doctorsapp.exception.ResourceNotFoundException;
+import com.example.doctorsapp.model.Doctor;
+import com.example.doctorsapp.model.MedicalLicense;
+import com.example.doctorsapp.repository.DoctorRepo;
+import com.example.doctorsapp.repository.MedicalLicenseRepo;
+
+@Service
+public class DoctorServiceImpl implements DoctorService {
+
+    @Autowired
+    private DoctorRepo doctorRepo;
+
+    @Autowired
+    private MedicalLicenseRepo medicalLicenseRepo;
+
+    @Override
+    public Doctor saveDoctor(Doctor doctor) {
+
+        return doctorRepo.save(doctor);
+    }
+
+    @Override
+    public Doctor findDoctorById(int doctorId) {
+
+        Optional<Doctor> optionalDoctor = doctorRepo.findById(doctorId);
+        if (optionalDoctor.isEmpty()) {
+            throw new ResourceNotFoundException("Doctor with ID " + doctorId + " not found");
+        }
+        return optionalDoctor.get();
+    }
+
+    @Override
+    public List<Doctor> findAllDoctors() {
+        return doctorRepo.findAll();
+    }
+
+    @Override
+    public MedicalLicense addMedicalLicense(int doctorId, MedicalLicense medicalLicense) {
+
+        Optional<Doctor> optionalDoctor = doctorRepo.findById(doctorId);
+        if (optionalDoctor.isEmpty()) {
+            throw new ResourceNotFoundException("Doctor with ID " + doctorId + " not found");
+        }
+
+        Doctor doctor = optionalDoctor.get();
+        int experience = doctor.getYearsOfExperience();
+
+        if(experience < 2) {
+            throw new ExperienceRestrictionException("Doctor does not meet the minimum experience requirement. Cannot issue medical license.");
+        }
+
+        doctor.setMedicalLicense(medicalLicense);
+        medicalLicense.setDoctor(doctor);
+
+        doctorRepo.save(doctor);
+
+        return doctor.getMedicalLicense();
+    }
+}
+
+------------------------------------------
+
+package com.example.doctorsapp.service;
+
+import java.util.List;
+
+import com.example.doctorsapp.model.MedicalLicense;
+
+public interface MedicalLicenseService {
+
+    List<MedicalLicense> findAllMedicalLicenseByState(String licenseState);
+
+    MedicalLicense updateMedicalLicense(int licenseId, MedicalLicense medicalLicense);
+
+     List<MedicalLicense> getExpiredLicenses() ;
+}
+
+--------------------------------------------
+
+package com.example.doctorsapp.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.doctorsapp.exception.ResourceNotFoundException;
+import com.example.doctorsapp.model.MedicalLicense;
+import com.example.doctorsapp.repository.MedicalLicenseRepo;
+
+@Service
+public class MedicalLicenseServiceImpl implements MedicalLicenseService {
+
+    @Autowired
+    private MedicalLicenseRepo medicalLicenseRepo;
+
+    @Override
+    public List<MedicalLicense> findAllMedicalLicenseByState(String licenseState) {
+
+        return medicalLicenseRepo.findByLicenseState(licenseState);
+    }
+
+    @Override
+    public MedicalLicense updateMedicalLicense(int licenseId, MedicalLicense medicalLicense) {
+
+        Optional<MedicalLicense> optionalMedicalLicense = medicalLicenseRepo.findById(licenseId);
+        if (optionalMedicalLicense.isEmpty()) {
+            throw new ResourceNotFoundException("Medical license with ID " + licenseId + " not found");
+        }
+        MedicalLicense license = optionalMedicalLicense.get();
+        license.setIssueDate(medicalLicense.getIssueDate());
+        license.setExpiryDate(medicalLicense.getExpiryDate());
+        license.setLicenseState(medicalLicense.getLicenseState());
+        return medicalLicenseRepo.save(medicalLicense);
+    }
+
+   
+    @Override
+    public List<MedicalLicense> getExpiredLicenses() {
+        LocalDate today = LocalDate.now(); // get current date
+        return medicalLicenseRepo.findExpiredLicenses(today);
+    }
+}
+
+-------------------------------------------
+
+package com.example.doctorsapp.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.doctorsapp.exception.ExperienceRestrictionException;
+import com.example.doctorsapp.exception.ResourceNotFoundException;
+import com.example.doctorsapp.model.Doctor;
+import com.example.doctorsapp.model.MedicalLicense;
+import com.example.doctorsapp.service.DoctorService;
+
+@RestController
+public class DoctorController {
+
+    @Autowired
+    private DoctorService doctorService;
+
+    @PostMapping("/api/doctor")
+    public ResponseEntity<Doctor> addDoctor(@RequestBody Doctor doctor) {
+        try {
+            Doctor newDoctor = doctorService.saveDoctor(doctor);
+            return ResponseEntity.status(201).body(newDoctor);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PostMapping("/api/license/{doctorId}")
+    public ResponseEntity<?> addMedicalLicense(@PathVariable int doctorId, @RequestBody MedicalLicense medicalLicense) {
+
+        try {
+            MedicalLicense license = doctorService.addMedicalLicense(doctorId, medicalLicense);
+            return ResponseEntity.status(201).body(license);
+        } catch (ExperienceRestrictionException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @GetMapping("/api/doctor/{doctorId}")
+    public ResponseEntity<?> getDoctorDetails(@PathVariable int doctorId) {
+
+        try {
+           Doctor doctor =  doctorService.findDoctorById(doctorId);
+           return ResponseEntity.status(200).body(doctor);
+        }
+        catch(ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/doctor")
+    public ResponseEntity<List<Doctor>> getAllDoctors() {
+
+        List<Doctor> doctors = doctorService.findAllDoctors();
+        if(doctors.isEmpty()) {
+            return ResponseEntity.status(204).build();
+        }
+        return ResponseEntity.status(200).body(doctors);
+    }
+}
+
+-------------------------------------------------------
+
+package com.example.doctorsapp.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.doctorsapp.exception.ResourceNotFoundException;
+import com.example.doctorsapp.model.MedicalLicense;
+import com.example.doctorsapp.service.MedicalLicenseService;
+
+@RestController
+public class MedicalLicenseController {
+
+    @Autowired
+    private MedicalLicenseService medicalLicenseService;
+
+    @GetMapping("/api/license/state/{licenseState}")
+    public ResponseEntity<?> getAllLicensesByState(@PathVariable String licenseState) {
+        List<MedicalLicense> list = medicalLicenseService.findAllMedicalLicenseByState(licenseState);
+        if (list.isEmpty()) {
+            return ResponseEntity.status(404).body("No medical license found for state : " + licenseState);
+        }
+        return ResponseEntity.status(200).body(list);
+    }
+
+    @PutMapping("/api/license/{licenseId}")
+    public ResponseEntity<?> updateLicense(@PathVariable int licenseId, @RequestBody MedicalLicense license) {
+        try {
+            MedicalLicense updatedLicense = medicalLicenseService.updateMedicalLicense(licenseId, license);
+            return ResponseEntity.status(200).body(updatedLicense);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+
+    }
+
+      //Find licenses that are expired
+    @GetMapping("/expired") 
+    public List<MedicalLicense> getExpiredLicenses() { 
+        return licenseService.getExpiredLicenses(); 
+    }
+
+}
+
