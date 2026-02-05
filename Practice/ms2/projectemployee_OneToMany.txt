@@ -1,0 +1,368 @@
+package com.example.doctorlicense.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+
+@Entity
+public class Project {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String projectName;
+    private double budget;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Employee> employees = new ArrayList<>();
+}
+
+--------------------------------------------------------------
+
+package com.example.doctorlicense.model;
+
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+
+@Entity
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int employeeId;
+    private String name;
+    private String role;
+    private double salary;
+    private boolean maritalStatus;
+    private LocalDate dateOfBirth;
+
+    @ManyToOne
+    @JoinColumn(name="project_id")
+    @JsonBackReference
+    private Project project;
+}
+
+------------------------------------------------------------
+
+package com.example.doctorlicense.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.doctorlicense.model.Employee;
+
+public interface EmployeeRepository extends JpaRepository<Employee,Integer>{
+
+}
+
+---------------------------------------------
+
+package com.example.doctorlicense.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.doctorlicense.model.Project;
+
+public interface ProjectRepository extends JpaRepository<Project,Integer> {
+
+}
+
+----------------------------------------------
+
+package com.example.doctorlicense.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+
+    public ResourceNotFoundException(String msg) {
+        super(msg);
+    }
+}
+
+
+package com.example.doctorlicense.exception;
+
+public class ProjectAlreadyAssignedException extends RuntimeException{
+
+    public ProjectAlreadyAssignedException(String msg) {
+        super(msg);
+    }
+}
+
+
+package com.example.doctorlicense.exception;
+
+public class InvalidDetailsException extends RuntimeException {
+
+    public InvalidDetailsException(String msg) {
+        super(msg);
+    }
+}
+
+
+package com.example.doctorlicense.exception;
+
+public class InvalidDateOfBirthException extends RuntimeException {
+
+    public InvalidDateOfBirthException(String msg) {
+        super(msg);
+    }
+}
+
+
+--------------------------------------------
+
+package com.example.doctorlicense.service;
+
+import com.example.doctorlicense.model.Project;
+
+public interface ProjectService {
+
+    Project addProject(Project project);
+
+    Project assignEmployeeToProject(int projectId, int employeeId);
+}
+
+----------------------------------------------
+
+package com.example.doctorlicense.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.doctorlicense.exception.ProjectAlreadyAssignedException;
+import com.example.doctorlicense.exception.ResourceNotFoundException;
+import com.example.doctorlicense.model.Employee;
+import com.example.doctorlicense.model.Project;
+import com.example.doctorlicense.repository.EmployeeRepository;
+import com.example.doctorlicense.repository.ProjectRepository;
+
+@Service
+public class ProjectServiceImpl implements ProjectService {
+
+    @Autowired
+    private ProjectRepository projectRepo;
+
+    @Autowired
+    private EmployeeRepository empRepo;
+
+    @Override
+    public Project addProject(Project project) {
+        return projectRepo.save(project);
+    }
+
+    @Override
+    public Project assignEmployeeToProject(int projectId, int employeeId) {
+
+        Optional<Project> optProject = projectRepo.findById(projectId);
+        Optional<Employee> optEmp = empRepo.findById(employeeId);
+
+        if (optProject.isEmpty() || optEmp.isEmpty()) {
+
+            throw new ResourceNotFoundException("not found");
+        }
+
+        Project project = optProject.get();
+        Employee emp = optEmp.get();
+
+        if (emp.getProject() != null) {
+            throw new ProjectAlreadyAssignedException("Employee already assigned to a project");
+        }
+
+        emp.setProject(project);
+
+        List<Employee> projectEmps = project.getEmployees();
+        projectEmps.add(emp);
+
+        projectRepo.save(project); // cascade will persist employee
+        
+        // empRepo.save(employee); // save owning side, if you are not using cascade
+
+        return project;
+    }
+}
+
+-----------------------------------------------------------
+
+package com.example.doctorlicense.service;
+
+import com.example.doctorlicense.model.Employee;
+
+public interface EmployeeService {
+
+    Employee addEmployee(Employee employee);
+}
+
+-------------------------------------------
+
+package com.example.doctorlicense.service;
+
+import java.time.LocalDate;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.doctorlicense.exception.InvalidDateOfBirthException;
+import com.example.doctorlicense.exception.InvalidDetailsException;
+import com.example.doctorlicense.model.Employee;
+import com.example.doctorlicense.repository.EmployeeRepository;
+
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+
+    @Autowired
+    private EmployeeRepository employeeRepo;
+
+    @Override
+    public Employee addEmployee(Employee employee) {
+
+        validateEmployee(employee); // any validation is failed throw the exception
+
+        return employeeRepo.save(employee);
+    }
+
+    private void validateEmployee(Employee employee) {
+
+        if (employee == null) {
+            throw new InvalidDetailsException("Employee object cannot be null");
+        }
+
+        if (employee.getName() == null || employee.getName().trim().isEmpty()) {
+            throw new InvalidDetailsException("Employee name is mandatory");
+        }
+
+        if (employee.getRole() == null || employee.getRole().trim().isEmpty()) {
+            throw new InvalidDetailsException("Employee role is mandatory");
+        }
+
+        if (employee.getSalary() <= 0) {
+            throw new InvalidDetailsException("Salary must be greater than zero");
+        }
+
+        if (employee.getDateOfBirth() == null) {
+            throw new InvalidDetailsException("Date of birth is mandatory");
+        }
+
+        if (!employee.getDateOfBirth().isBefore(LocalDate.now())) {
+            throw new InvalidDateOfBirthException("Date of birth must be less than current date");
+        }
+    }
+}
+
+-------------------------------------------------
+package com.example.doctorlicense.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.doctorlicense.exception.InvalidDateOfBirthException;
+import com.example.doctorlicense.exception.InvalidDetailsException;
+import com.example.doctorlicense.exception.ProjectAlreadyAssignedException;
+import com.example.doctorlicense.exception.ResourceNotFoundException;
+import com.example.doctorlicense.model.Project;
+import com.example.doctorlicense.service.ProjectService;
+
+@RestController
+public class ProjectController {
+
+    @Autowired
+    private ProjectService pService;
+
+    @PostMapping("/project")
+    public ResponseEntity<?> addProject(@RequestBody Project project) {
+        try {
+            pService.addProject(project);
+            return ResponseEntity.status(201).body(project);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PostMapping("/project/{projectId}/employee/{employeeId}")
+    public ResponseEntity<?> assignProject(@PathVariable int projectId, @PathVariable int employeeId) {
+
+        try {
+            Project project = pService.assignEmployeeToProject(projectId, employeeId);
+            return ResponseEntity.status(201).body(project);
+        } catch (ProjectAlreadyAssignedException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+}
+
+------------------------------------------------------------------
+
+package com.example.doctorlicense.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.doctorlicense.exception.InvalidDateOfBirthException;
+import com.example.doctorlicense.exception.InvalidDetailsException;
+import com.example.doctorlicense.model.Employee;
+import com.example.doctorlicense.service.EmployeeService;
+
+@RestController
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeService empService;
+
+    @PostMapping("/api/employee")
+    public ResponseEntity<?> addEmployee(@RequestBody Employee employee) {
+        try {
+            empService.addEmployee(employee);
+            return ResponseEntity.status(201).body(employee);
+        } catch (InvalidDetailsException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (InvalidDateOfBirthException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+}
+
+----------------------------------------------------------------------------
+-------------------------------------------------------
+
+
