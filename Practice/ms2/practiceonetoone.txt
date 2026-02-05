@@ -1,0 +1,154 @@
+
+public class Person {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int personId;
+    private String name;
+    private int age;
+    private String nationality;
+
+    @OneToOne(mappedBy = "person", cascade = CascadeType.ALL) //inverse side  //CascadeType.ALL on Person ensures saving Person also saves Passport
+    @JsonManagedReference
+    private Passport passport;
+}
+
+
+public class Passport {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int passportId;
+    private String passportNumber;
+    private LocalDate issueDate;
+    private LocalDate expiryDate;
+
+    @OneToOne
+    @JoinColumn(name = "person_id")  //owning side
+    @JsonBackReference
+    private Person person;
+}
+
+
+PersonService
+
+Implement the following methods:
+
+Person createPerson(Person person)
+
+Person getPersonById(int personId)
+
+List<Person> getAllPersons()
+
+Person updatePerson(int personId, Person person)
+
+void deletePerson(int personId)
+
+PassportService
+
+Implement:
+
+Passport addPassportToPerson(int personId, Passport passport);
+
+
+PersonController
+
+Method	Endpoint	Description
+POST	/person	Create person
+GET	/person/{id}	Get person by ID
+GET	/person	Get all persons
+PUT	/person/{id}	Update person
+DELETE	/person/{id}	Delete person
+
+
+PassportController
+Method	Endpoint	Description
+POST	/passport/{personId}/person	Add passport to person
+
+
+
+
+
+
+
+===================================================================
+
+Without cascade, we must save the passport manually when adding it to a person:
+
+package com.examly.springapp.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.examly.springapp.model.Passport;
+import com.examly.springapp.model.Person;
+import com.examly.springapp.repository.PassportRepository;
+import com.examly.springapp.repository.PersonRepository;
+
+@Service
+@Transactional
+public class PassportServiceImpl implements PassportService {
+
+    @Autowired
+    private PassportRepository passportRepo;
+
+    @Autowired
+    private PersonRepository personRepo;
+
+    @Override
+    public Passport addPassportToPerson(int personId, Passport passport) {
+        Person person = personRepo.findById(personId)
+                .orElseThrow(() -> new RuntimeException("Person not found"));
+
+        // Set the owning relationship
+        passport.setPerson(person);
+        person.setPassport(passport);
+
+        // Must save passport explicitly since no cascade
+        return passportRepo.save(passport);
+    }
+}
+
+
+Delete Person without cascade
+
+@Override
+public void deletePerson(int personId) {
+    Person person = personRepo.findById(personId)
+            .orElseThrow(() -> new RuntimeException("Person not found"));
+
+    // Delete passport manually
+    Passport passport = person.getPassport();
+    if (passport != null) {
+        passportRepo.delete(passport);
+    }
+
+    personRepo.delete(person);
+}
+
+
+=============================================================================================
+
+with cascade:
+
+ @Override
+    public void deletePerson(int personId) {
+        Person person = getPersonById(personId);
+        personRepo.delete(person); // cascade deletes passport
+    }
+
+----------------------------------------------------------------------------------------
+
+ @Override
+    public Passport addPassportToPerson(int personId, Passport passport) {
+        Person person = personRepo.findById(personId)
+                .orElseThrow(() -> new RuntimeException("Person not found"));
+
+        passport.setPerson(person);
+        person.setPassport(passport);
+
+        // Save parent; cascade will save passport
+        personRepo.save(person);
+        return passport;
+    }
